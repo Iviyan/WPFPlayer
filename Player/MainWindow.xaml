@@ -7,6 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <MediaElement x:Name="media" Visibility="Collapsed" LoadedBehavior="Manual" />
+        
+        <local:ControlBar Grid.Row="1"/>
     </Grid>
 </Window>

@@ -16,22 +16,13 @@ using System.Windows.Shapes;
 namespace Player
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Логика взаимодействия для ControlBar.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ControlBar : UserControl
     {
-        public MainWindow()
+        public ControlBar()
         {
             InitializeComponent();
-
-            media.MediaFailed += M_MediaFailed;
-            //media.Source = new Uri("AURORA - Warrior.mp3", UriKind.RelativeOrAbsolute);
-           // media.Play();
-        }
-
-        private void M_MediaFailed(object sender, ExceptionRoutedEventArgs e)
-        {
-            MessageBox.Show(e.ErrorException.Message);
         }
     }
 }
