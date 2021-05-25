@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Player"
+             xmlns:m="clr-namespace:Player"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              MinHeight="100"
              MaxHeight="100"
@@ -96,6 +97,7 @@
         </Style>
 
         <local:SecondsToTimeConverter x:Key="secondsToTimeConverter" />
+        <local:MultiplyConverter x:Key="multiplyConverter" />
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -147,9 +149,11 @@
                 <ToggleButton x:Name="PlayPauseTBtn"
                               Width="50"
                               Height="50"
+                              Checked="PlayPauseTBtn_Checked"
                               FontFamily="Segoe MDL2 Assets"
                               FontSize="26px"
-                              IsChecked="True">
+                              IsChecked="False"
+                              Unchecked="PlayPauseTBtn_Unchecked">
                     <ToggleButton.Style>
                         <Style BasedOn="{StaticResource CircleButtonStyle}" TargetType="ToggleButton">
                             <Setter Property="Content" Value="&#xE768;" />
@@ -208,23 +212,24 @@
                     BorderThickness="1"
                     CornerRadius="4">
                 <DockPanel VerticalAlignment="Center">
-                    <TextBlock DockPanel.Dock="Left"
-                               VerticalAlignment="Center"
+                    <TextBlock VerticalAlignment="Center"
+                               DockPanel.Dock="Left"
                                FontFamily="Segoe MDL2 Assets"
                                FontSize="20px"
                                Text="&#xE767;" />
 
-                    <TextBlock DockPanel.Dock="Top"
-                               Margin="0 0 0 6px"
+                    <TextBlock Margin="0 0 0 6px"
                                HorizontalAlignment="Center"
-                               d:Text="14%"
-                               Text="{Binding ElementName=VolumeSl, Path=Value, StringFormat={}{0}%}" />
+                               d:Text="70%"
+                               DockPanel.Dock="Top"
+                               Text="{Binding ElementName=VolumeSl, Path=Value, Converter={StaticResource multiplyConverter}, ConverterParameter={m:Int32 100}, StringFormat={}{0}%}" />
                     <Slider x:Name="VolumeSl"
                             Margin="6px 0 6px 0"
-                            d:Value="14"
+                            d:Value="0.7"
                             IsSnapToTickEnabled="True"
-                            Maximum="100"
-                            Minimum="0" />
+                            Maximum="1"
+                            Minimum="0"
+                            TickFrequency="0.01" />
 
                 </DockPanel>
             </Border>
@@ -232,23 +237,26 @@
 
         <DockPanel Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center">
             <TextBlock x:Name="TimeCurrentTBl"
-                       DockPanel.Dock="Left"
                        MinWidth="{Binding ElementName=TimeMaxTBl, Path=ActualWidth}"
                        Margin="6px 0 6px 0"
                        d:Text="1:54"
+                       DockPanel.Dock="Left"
                        Text="{Binding ElementName=TimeSl, Path=Value, Converter={StaticResource secondsToTimeConverter}}"
                        TextAlignment="Right" />
             <TextBlock x:Name="TimeMaxTBl"
-                       DockPanel.Dock="Right"
                        MinWidth="30px"
                        Margin="6px 0 6px 0"
                        d:Text="3:43"
+                       DockPanel.Dock="Right"
                        Text="{Binding ElementName=TimeSl, Path=Maximum, Converter={StaticResource secondsToTimeConverter}}" />
 
             <Slider x:Name="TimeSl"
                     DockPanel.Dock="Right"
                     IsSnapToTickEnabled="True"
                     Maximum="0"
+                    PreviewMouseDown="TimeSl_PreviewMouseDown"
+                    PreviewMouseUp="TimeSl_PreviewMouseUp"
+                    TickFrequency="0.2"
                     Value="0" />
         </DockPanel>
     </Grid>

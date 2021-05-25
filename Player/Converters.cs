@@ -37,7 +37,7 @@ namespace Player
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int s = System.Convert.ToInt32(value);
+            int s = (int)System.Convert.ToDouble(value);
 
             int ts = s % 60; s /= 60;
             string r = ts.ToString().PadLeft(2, '0');
@@ -56,6 +56,12 @@ namespace Player
             return $"{td}:{r}";
 
         }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    class MultiplyConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Math.Round(System.Convert.ToDouble(value) * System.Convert.ToDouble(parameter), 12);
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

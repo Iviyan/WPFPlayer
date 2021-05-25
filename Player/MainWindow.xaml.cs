@@ -24,14 +24,9 @@ namespace Player
         {
             InitializeComponent();
 
-            media.MediaFailed += M_MediaFailed;
-            //media.Source = new Uri("AURORA - Warrior.mp3", UriKind.RelativeOrAbsolute);
-           // media.Play();
-        }
-
-        private void M_MediaFailed(object sender, ExceptionRoutedEventArgs e)
-        {
-            MessageBox.Show(e.ErrorException.Message);
+            MediaControlBar.Playlist = new List<string>() {
+               /*...*/
+            };
         }
     }
 }
