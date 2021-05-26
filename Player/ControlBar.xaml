@@ -6,7 +6,7 @@
              xmlns:m="clr-namespace:Player"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              MinHeight="100"
-             MaxHeight="100"
+             MaxHeight="670"
              d:DesignHeight="90"
              d:DesignWidth="800"
              Background="#F8F8F8"
@@ -98,6 +98,8 @@
 
         <local:SecondsToTimeConverter x:Key="secondsToTimeConverter" />
         <local:MultiplyConverter x:Key="multiplyConverter" />
+        <local:IsMoreOrEqualThanConverter x:Key="isMoreOrEqualThanConverter" />
+        <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -128,19 +130,41 @@
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
 
+                <Button x:Name="Back10sBtn"
+                        Width="30"
+                        Height="30"
+                        Margin="6px 0 6px 0"
+                        d:Visibility="Visible"
+                        Style="{DynamicResource CircleButtonStyle}"
+                        Tag="{Binding RelativeSource={RelativeSource AncestorType=local:ControlBar}, Path=ActualWidth, Converter={StaticResource isMoreOrEqualThanConverter}, ConverterParameter={m:Int32 800}}"
+                        Visibility="{Binding Path=Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}"
+                        Click="Back10sBtn_Click">
+                    <Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                             Width="24"
+                             Stretch="Uniform">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z" Fill="Black" />
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
                 <ToggleButton x:Name="ShuffleTbtn"
                               Width="40"
                               Height="40"
+                              Checked="ShuffleTbtn_Checked"
                               Content="&#xE8B1;"
                               FontFamily="Segoe MDL2 Assets"
                               FontSize="20px"
                               Style="{StaticResource CircleToggleButtonStyle}"
-                              ToolTip="Случайный порядок" />
+                              ToolTip="Случайный порядок"
+                              Unchecked="ShuffleTbtn_Unchecked" />
 
                 <Button x:Name="BackBtn"
                         Width="45"
                         Height="45"
                         Margin="6px 0 6px 0"
+                        Click="BackBtn_Click"
                         Content="&#xE892;"
                         FontFamily="Segoe MDL2 Assets"
                         FontSize="22px"
@@ -170,10 +194,12 @@
                         Width="45"
                         Height="45"
                         Margin="6px 0 6px 0"
+                        Click="NextBtn_Click"
                         Content="&#xE893;"
                         FontFamily="Segoe MDL2 Assets"
                         FontSize="22px"
                         Style="{DynamicResource CircleButtonStyle}" />
+
 
                 <ToggleButton x:Name="RepeatTBtn"
                               Width="40"
@@ -202,6 +228,25 @@
                         </Style>
                     </ToggleButton.Style>
                 </ToggleButton>
+
+                <Button x:Name="Forward10sBtn"
+                        Width="30"
+                        Height="30"
+                        Margin="6px 0 6px 0"
+                        d:Visibility="Visible"
+                        Click="Forward10sBtn_Click"
+                        Style="{DynamicResource CircleButtonStyle}"
+                        Tag="{Binding RelativeSource={RelativeSource AncestorType=local:ControlBar}, Path=ActualWidth, Converter={StaticResource isMoreOrEqualThanConverter}, ConverterParameter={m:Int32 800}}"
+                        Visibility="{Binding Path=Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}">
+                    <Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                             Width="22"
+                             Stretch="Uniform">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.54,15.22L3.9,16C4.95,12.81 7.95,10.5 11.5,10.5C13.45,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z" Fill="Black" />
+                        </Canvas>
+                    </Viewbox>
+                </Button>
             </StackPanel>
 
             <Border Grid.Column="1"

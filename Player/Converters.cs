@@ -64,4 +64,16 @@ namespace Player
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Math.Round(System.Convert.ToDouble(value) * System.Convert.ToDouble(parameter), 12);
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
+    
+    class IsMoreThanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToDouble(value) > System.Convert.ToDouble(parameter);
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+    
+    class IsMoreOrEqualThanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToDouble(value) >= System.Convert.ToDouble(parameter);
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
 }

@@ -22,6 +22,7 @@ namespace Player
     public partial class ControlBar : UserControl
     {
         private MediaElement media;
+        private IList<string> originalPlaylist;
         private IList<string> playlist;
         private int currentTrack = 0;
 
@@ -75,7 +76,12 @@ namespace Player
         {
             get => playlist;
             set {
-                playlist = value;
+                originalPlaylist = value;
+                if (ShuffleTbtn.IsChecked == true)
+                    playlist = originalPlaylist.Shuffle();
+                else
+                    playlist = originalPlaylist;
+
                 CurrentTrack = 0;
                 SetControlEnable();
             }
@@ -151,6 +157,21 @@ namespace Player
                 CurrentTrack++;
         }
 
+        void Prev()
+        {
+            if (media.Position.TotalSeconds > 5)
+            {
+                media.Position = TimeSpan.Zero;
+                return;
+            }
+
+            if (CurrentTrack -1 < 0)
+            {
+                CurrentTrack = Playlist.Count - 1;
+            } else
+                CurrentTrack--;
+        }
+
         private void Media_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
             throw new NotImplementedException();
@@ -194,6 +215,46 @@ namespace Player
         {
             timerVideoTime.Start();
             media.Position = TimeSpan.FromSeconds(TimeSl.Value);
+        }
+
+        private void NextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Next();
+        }
+
+        private void BackBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Prev();
+        }
+
+        private void ShuffleTbtn_Checked(object sender, RoutedEventArgs e)
+        {
+            playlist = originalPlaylist.ShuffleWithoutFirstElement(CurrentTrack);
+            currentTrack = 0;
+        }
+
+        private void ShuffleTbtn_Unchecked(object sender, RoutedEventArgs e)
+        {
+            currentTrack = originalPlaylist.IndexOf(playlist[CurrentTrack]);
+            playlist = originalPlaylist;
+        }
+
+        private void Back10sBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var time_ = media.Position - TimeSpan.FromSeconds(10);
+            if (time_ >= TimeSpan.Zero)
+                media.Position = time_;
+            else
+                media.Position = TimeSpan.Zero;
+        }
+
+        private void Forward10sBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var time_ = media.Position + TimeSpan.FromSeconds(10);
+            if (time_ <= media.NaturalDuration)
+                media.Position = time_;
+            else
+                Next();
         }
     }
 }
