@@ -59,4 +59,11 @@ namespace Player
         public int Value { get; set; }
         public override Object ProvideValue(IServiceProvider sp) => Value;
     };
+    
+    public sealed class BoolExtension : MarkupExtension
+    {
+        public BoolExtension(bool value) => Value = value;
+        public bool Value { get; set; }
+        public override Object ProvideValue(IServiceProvider sp) => Value;
+    };
 }

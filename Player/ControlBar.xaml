@@ -100,6 +100,7 @@
         <local:MultiplyConverter x:Key="multiplyConverter" />
         <local:IsMoreOrEqualThanConverter x:Key="isMoreOrEqualThanConverter" />
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <local:VisibleIfConverter x:Key="visibleIfConverter" />
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -135,10 +136,17 @@
                         Height="30"
                         Margin="6px 0 6px 0"
                         d:Visibility="Visible"
-                        Style="{DynamicResource CircleButtonStyle}"
-                        Tag="{Binding RelativeSource={RelativeSource AncestorType=local:ControlBar}, Path=ActualWidth, Converter={StaticResource isMoreOrEqualThanConverter}, ConverterParameter={m:Int32 800}}"
-                        Visibility="{Binding Path=Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}"
-                        Click="Back10sBtn_Click">
+                        Click="Back10sBtn_Click"
+                        Style="{DynamicResource CircleButtonStyle}">
+                    <Button.Visibility>
+                        <MultiBinding Converter="{StaticResource visibleIfConverter}">
+                            <Binding Path="RewindButtonsVisibility" RelativeSource="{RelativeSource AncestorType=local:ControlBar}" />
+                            <Binding Converter="{StaticResource isMoreOrEqualThanConverter}"
+                                     ConverterParameter="{m:Int32 800}"
+                                     Path="ActualWidth"
+                                     RelativeSource="{RelativeSource AncestorType=local:ControlBar}" />
+                        </MultiBinding>
+                    </Button.Visibility>
                     <Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                              Width="24"
@@ -235,9 +243,16 @@
                         Margin="6px 0 6px 0"
                         d:Visibility="Visible"
                         Click="Forward10sBtn_Click"
-                        Style="{DynamicResource CircleButtonStyle}"
-                        Tag="{Binding RelativeSource={RelativeSource AncestorType=local:ControlBar}, Path=ActualWidth, Converter={StaticResource isMoreOrEqualThanConverter}, ConverterParameter={m:Int32 800}}"
-                        Visibility="{Binding Path=Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}">
+                        Style="{DynamicResource CircleButtonStyle}">
+                    <Button.Visibility>
+                        <MultiBinding Converter="{StaticResource visibleIfConverter}">
+                            <Binding Path="RewindButtonsVisibility" RelativeSource="{RelativeSource AncestorType=local:ControlBar}" />
+                            <Binding Converter="{StaticResource isMoreOrEqualThanConverter}"
+                                     ConverterParameter="{m:Int32 800}"
+                                     Path="ActualWidth"
+                                     RelativeSource="{RelativeSource AncestorType=local:ControlBar}" />
+                        </MultiBinding>
+                    </Button.Visibility>
                     <Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                              Width="22"
@@ -268,6 +283,7 @@
                                d:Text="70%"
                                DockPanel.Dock="Top"
                                Text="{Binding ElementName=VolumeSl, Path=Value, Converter={StaticResource multiplyConverter}, ConverterParameter={m:Int32 100}, StringFormat={}{0}%}" />
+
                     <Slider x:Name="VolumeSl"
                             Margin="6px 0 6px 0"
                             d:Value="0.7"
@@ -287,7 +303,8 @@
                        d:Text="1:54"
                        DockPanel.Dock="Left"
                        Text="{Binding ElementName=TimeSl, Path=Value, Converter={StaticResource secondsToTimeConverter}}"
-                       TextAlignment="Right" />
+                       TextAlignment="Right"
+                       ToolTip="{Binding}" />
             <TextBlock x:Name="TimeMaxTBl"
                        MinWidth="30px"
                        Margin="6px 0 6px 0"

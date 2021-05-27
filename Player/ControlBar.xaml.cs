@@ -62,7 +62,7 @@ namespace Player
             }
 
             cb.media = media;
-            
+
             cb.SetControlEnable();
         }
 
@@ -95,6 +95,16 @@ namespace Player
                 if (playlist != null)
                     SetTrack();
             }
+        }
+
+        public static readonly DependencyProperty RewindButtonsVisibilityProperty = DependencyProperty.Register(
+            "RewindButtonsVisibility", typeof(bool), typeof(ControlBar),
+            new FrameworkPropertyMetadata(true));
+
+        public bool RewindButtonsVisibility
+        {
+            get { return (bool)GetValue(RewindButtonsVisibilityProperty); }
+            set { SetValue(RewindButtonsVisibilityProperty, value); }
         }
 
 
@@ -165,7 +175,7 @@ namespace Player
                 return;
             }
 
-            if (CurrentTrack -1 < 0)
+            if (CurrentTrack - 1 < 0)
             {
                 CurrentTrack = Playlist.Count - 1;
             } else

@@ -3,19 +3,118 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:Player"
+        xmlns:m="clr-namespace:Player"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        Title="MainWindow"
+        Title="Плеер"
         Width="850"
         Height="450"
         MinWidth="680"
+        d:DataContext="{d:DesignInstance Type=local:MainWindowModel,
+                                         IsDesignTimeCreatable=True}"
+        Closing="Window_Closing"
         mc:Ignorable="d">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <local:IsEqualConverter x:Key="isEqualConverter" />
+        <local:TernaryConverter x:Key="TernaryConverter" />
+        <local:VisibleIfConverter x:Key="visibleIfConverter" />
+        <local:InvertBoolConverter x:Key="invertBoolConverter" />
+
+        <ContextMenu x:Key="AccountCMenu">
+            <MenuItem Header="{Binding Login}" IsHitTestVisible="False" Visibility="{Binding IsAuthorized, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Icon>
+                    <Run FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE77B;" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem IsHitTestVisible="False" Visibility="{Binding IsAuthorized, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Header>
+                    <MultiBinding Converter="{StaticResource TernaryConverter}">
+                        <Binding Path="IsPro" UpdateSourceTrigger="PropertyChanged" />
+                        <Binding Source="Подписка активирована" />
+                        <Binding Source="Подписка не активирована" />
+                    </MultiBinding>
+                </MenuItem.Header>
+                <MenuItem.Icon>
+                    <Run FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE734;" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+
+            <MenuItem x:Name="AuthMI"
+                      Click="AuthMI_Click"
+                      Header="Вход"
+                      Tag="{Binding IsAuthorized, Converter={StaticResource isEqualConverter}, ConverterParameter={m:Bool false}}"
+                      Visibility="{Binding Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Icon>
+                    <Run FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xF081;" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="RegMI"
+                      Click="RegMI_Click"
+                      Header="Регистрация"
+                      Tag="{Binding IsAuthorized, Converter={StaticResource isEqualConverter}, ConverterParameter={m:Bool false}}"
+                      Visibility="{Binding Tag, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Icon>
+                    <Run FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE8FA;" />
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <MenuItem x:Name="BuyProMI" Click="BuyProMI_Click" Header="Купить Pro версию">
+                <MenuItem.Visibility>
+                    <MultiBinding Converter="{StaticResource visibleIfConverter}">
+                        <Binding Path="IsAuthorized" />
+                        <Binding Converter="{StaticResource invertBoolConverter}" Path="IsPro" />
+                    </MultiBinding>
+                </MenuItem.Visibility>
+            </MenuItem>
+
+            <MenuItem x:Name="LogoutMI"
+                      Click="LogoutMI_Click"
+                      Header="Выход"
+                      Visibility="{Binding IsAuthorized, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Icon>
+                    <Run BaselineAlignment="Center"
+                         FontFamily="Segoe MDL2 Assets"
+                         FontSize="16"
+                         Text="&#xF3B1;" />
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
             <RowDefinition />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <MediaElement x:Name="media" LoadedBehavior="Manual" Visibility="Collapsed" />
 
-        <local:ControlBar x:Name="MediaControlBar" Grid.Row="1" Media="{Binding ElementName=media}" />
+        <DockPanel Margin="2px" VerticalAlignment="Top">
+            <Button x:Name="AccountBtn"
+                    Padding="4"
+                    Click="AccountBtn_Click"
+                    Content="Аккаунт"
+                    DockPanel.Dock="Right"
+                    FontSize="18" />
+
+            <TextBlock HorizontalAlignment="Center" FontSize="24" Text="Плейлисты" />
+        </DockPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0,35*" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="0,65*" />
+            </Grid.ColumnDefinitions>
+
+            <ListBox x:Name="PlaylistsLB" />
+            <GridSplitter Grid.Column="1" Width="2" VerticalAlignment="Stretch" />
+            <ListBox x:Name="PlaylistLB" Grid.Column="2" />
+        </Grid>
+
+        <local:ControlBar x:Name="MediaControlBar"
+                          Grid.Row="2"
+                          Media="{Binding ElementName=media}"
+                          RewindButtonsVisibility="{Binding IsPro}" />
     </Grid>
 </Window>

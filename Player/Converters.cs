@@ -9,6 +9,12 @@ using System.Windows.Data;
 
 namespace Player
 {
+    class InvertBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => !(value is bool b && b);
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+    
     class IsEqualConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Object.Equals(value, parameter);
@@ -51,7 +57,7 @@ namespace Player
             int th = s % 24; s /= 24;
             r = $"{th.ToString().PadLeft(2, '0')}:{r}";
             if (s == 0) return r;
-            
+
             int td = s;
             return $"{td}:{r}";
 
@@ -64,16 +70,37 @@ namespace Player
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Math.Round(System.Convert.ToDouble(value) * System.Convert.ToDouble(parameter), 12);
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
-    
+
     class IsMoreThanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToDouble(value) > System.Convert.ToDouble(parameter);
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
-    
+
     class IsMoreOrEqualThanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToDouble(value) >= System.Convert.ToDouble(parameter);
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    class TernaryConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => values[0] is bool b && b ? values[1] : values[2];
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    class AllConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => values.All(v => v is bool b && b);
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+    
+    class VisibleIfConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => values.All(v => v is bool b && b) ? Visibility.Visible : Visibility.Collapsed;
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }
