@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -102,5 +103,11 @@ namespace Player
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => values.All(v => v is bool b && b) ? Visibility.Visible : Visibility.Collapsed;
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    class ExtractFileNameConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is string p ? Path.GetFileName(p) : null;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

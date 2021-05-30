@@ -9,16 +9,18 @@
         Width="850"
         Height="450"
         MinWidth="680"
-        d:DataContext="{d:DesignInstance Type=local:MainWindowModel,
+        d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                          IsDesignTimeCreatable=True}"
         Closing="Window_Closing"
         mc:Ignorable="d">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
         <local:IsEqualConverter x:Key="isEqualConverter" />
+        <local:IsNotEqualConverter x:Key="isNotEqualConverter" />
         <local:TernaryConverter x:Key="TernaryConverter" />
         <local:VisibleIfConverter x:Key="visibleIfConverter" />
         <local:InvertBoolConverter x:Key="invertBoolConverter" />
+        <local:ExtractFileNameConverter x:Key="extractFileNameConverter" />
 
         <ContextMenu x:Key="AccountCMenu">
             <MenuItem Header="{Binding Login}" IsHitTestVisible="False" Visibility="{Binding IsAuthorized, Converter={StaticResource booleanToVisibilityConverter}}">
@@ -80,6 +82,61 @@
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
+
+        <SolidColorBrush x:Key="Item.MouseOver.Background" Color="#1a888888" />
+        <SolidColorBrush x:Key="Item.MouseOver.Border" Color="#A8719EB3" />
+        <SolidColorBrush x:Key="Item.SelectedActive.Background" Color="#3DBABABA" />
+        <SolidColorBrush x:Key="Item.SelectedActive.Border" Color="Gray" />
+        <SolidColorBrush x:Key="Item.SelectedInactive.Background" Color="#30BABABA" />
+        <SolidColorBrush x:Key="Item.SelectedInactive.Border" Color="Gray" />
+        <Style x:Key="RemovableListBoxItemContainerStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="Bd"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="true">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Item.MouseOver.Background}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Item.MouseOver.Border}" />
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="True" />
+                                    <Condition Property="IsSelected" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Item.SelectedActive.Background}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Item.SelectedActive.Border}" />
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Selector.IsSelectionActive" Value="False" />
+                                    <Condition Property="IsSelected" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Item.SelectedInactive.Background}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Item.SelectedInactive.Border}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -107,9 +164,145 @@
                 <ColumnDefinition Width="0,65*" />
             </Grid.ColumnDefinitions>
 
-            <ListBox x:Name="PlaylistsLB" />
+            <DockPanel>
+                <Button Command="{Binding AddPlaylistCommand}" Content="Добавить" DockPanel.Dock="Bottom" />
+                <ListBox x:Name="PlaylistsLB"
+                         Margin="0 0 0 4"
+                         HorizontalContentAlignment="Stretch"
+                         ItemContainerStyle="{DynamicResource RemovableListBoxItemContainerStyle}"
+                         ItemsSource="{Binding Playlists}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectedItem="{Binding CurrentPlaylist}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:Playlist}">
+                            <Grid x:Name="TGrid" Margin="1px">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+                                <local:DoubleClickEditableTextBox Margin="3 2 4 2"
+                                                                  FontSize="14px"
+                                                                  Text="{Binding Name}"
+                                                                  TextWrapping="Wrap" />
+                                <Button x:Name="TDelBtn"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=DataContext.DeletePlaylistCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="&#xE8BB;"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        Foreground="#3591E2">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type Button}">
+                                                        <Border x:Name="TBorder"
+                                                                Padding="1px"
+                                                                Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="1">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="TBorder" Property="Button.Foreground" Value="Red" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=TDelBtn, Path=IsPressed}" Value="true">
+                                                <Setter Property="Background" Value="#12FF0000" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
             <GridSplitter Grid.Column="1" Width="2" VerticalAlignment="Stretch" />
-            <ListBox x:Name="PlaylistLB" Grid.Column="2" />
+            <DockPanel Grid.Column="2">
+                <Button Command="{Binding AddPlaylistItemCommand}"
+                        Content="Добавить"
+                        DockPanel.Dock="Bottom"
+                        IsEnabled="{Binding CurrentPlaylist, Converter={StaticResource isNotEqualConverter}, ConverterParameter={x:Null}}" />
+
+                <ListBox x:Name="PlaylistLB"
+                         Margin="0 0 0 4"
+                         HorizontalContentAlignment="Stretch"
+                         AllowDrop="{Binding CurrentPlaylist, Converter={StaticResource isNotEqualConverter}, ConverterParameter={x:Null}}"
+                         Drop="PlaylistLB_Drop"
+                         SelectionChanged="PlaylistLB_SelectionChanged"
+                         ItemContainerStyle="{DynamicResource RemovableListBoxItemContainerStyle}"
+                         ItemsSource="{Binding Path=CurrentPlaylist.Items}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:Playlist}">
+                            <Grid x:Name="TGrid" Margin="1px">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="3 2 4 2"
+                                           FontSize="14px"
+                                           Text="{Binding Path=., Converter={StaticResource extractFileNameConverter}}"
+                                           TextWrapping="Wrap" />
+                                <Button x:Name="TDelBtn"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=DataContext.DeletePlaylistItemCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="&#xE8BB;"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        Foreground="#3591E2">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type Button}">
+                                                        <Border x:Name="TBorder"
+                                                                Padding="1px"
+                                                                Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="1">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="TBorder" Property="Button.Foreground" Value="Red" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=TDelBtn, Path=IsPressed}" Value="true">
+                                                <Setter Property="Background" Value="#12FF0000" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
         </Grid>
 
         <local:ControlBar x:Name="MediaControlBar"

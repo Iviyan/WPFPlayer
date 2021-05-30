@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace Player
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainWindowModel vm = new();
+        MainWindowViewModel vm = new();
         Settings settings = new();
         LocalSettings localSettings;
 
@@ -29,10 +30,6 @@ namespace Player
             InitializeComponent();
 
             this.DataContext = vm;
-
-            MediaControlBar.Playlist = new List<string>() {
-                /*...*/
-            };
 
             AccountMenu = this.Resources["AccountCMenu"] as ContextMenu;
 
@@ -97,6 +94,26 @@ namespace Player
         {
             bool r = settings.UpdateAccount(vm.Login, pro: true);
             if (r) vm.IsPro = true;
+        }
+
+        static string[] mediaFileExtensions = { "wav", "aac", "wma", "wmv", "avi", "mpg", "mpeg", "m1v", "mp2", "mp3", "mpa", "mpe", "m3u", "mp4", "mov", "3g2", "3gp2", "3gp", "3gpp", "m4a", "cda", "aif", "aifc", "aiff", "mid", "midi", "rmi", "mkv" };
+        private void PlaylistLB_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                foreach (var file in files)
+                {
+                    if (File.Exists(file) && mediaFileExtensions.Contains(System.IO.Path.GetExtension(file).Substring(1).ToLower()))
+                        vm.CurrentPlaylist.Items.Add(file);
+                }
+            }
+        }
+
+        private void PlaylistLB_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PlaylistLB.SelectedIndex >= 0)
+                MediaControlBar.SetPlaylist(vm.CurrentPlaylist.Items, PlaylistLB.SelectedIndex);
         }
     }
 }

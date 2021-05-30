@@ -97,6 +97,18 @@ namespace Player
             }
         }
 
+        public void SetPlaylist(IList<string> playlist, int index)
+        {
+            originalPlaylist = playlist;
+            if (ShuffleTbtn.IsChecked == true)
+                this.playlist = originalPlaylist.Shuffle();
+            else
+                this.playlist = originalPlaylist;
+
+            CurrentTrack = index;
+            SetControlEnable();
+        }
+
         public static readonly DependencyProperty RewindButtonsVisibilityProperty = DependencyProperty.Register(
             "RewindButtonsVisibility", typeof(bool), typeof(ControlBar),
             new FrameworkPropertyMetadata(true));
@@ -122,22 +134,39 @@ namespace Player
 
         void SetControlEnable()
         {
-            bool b = Media != null;
-
+            bool b = Media != null && playlist != null && playlist.Count > 0;
             VolumeSl.IsEnabled = b;
-            if (playlist != null || b == false)
-            {
-                TimeSl.IsEnabled = b;
-                PlayPauseTBtn.IsEnabled = b;
-                BackBtn.IsEnabled = b;
-                NextBtn.IsEnabled = b;
-                ShuffleTbtn.IsEnabled = b;
-                RepeatTBtn.IsEnabled = b;
-            }
+
+            b = b && playlist != null && playlist.Count > 0;
+            TimeSl.IsEnabled = b;
+            PlayPauseTBtn.IsEnabled = b;
+            BackBtn.IsEnabled = b;
+            NextBtn.IsEnabled = b;
+            ShuffleTbtn.IsEnabled = b;
+            RepeatTBtn.IsEnabled = b;
+            Back10sBtn.IsEnabled = b;
+            Forward10sBtn.IsEnabled = b;
         }
 
         void SetTrack()
         {
+            if (CurrentTrack < 0 || Playlist.Count != 0 && CurrentTrack >= Playlist.Count)
+            {
+                CurrentTrack = 0;
+                return;
+            }
+
+            if (Playlist.Count == 0)
+            {
+                SetControlEnable();
+                media.Source = null;
+                TitleTBl.Text = "";
+                if (PlayPauseTBtn.IsChecked == true)
+                    PlayPauseTBtn.IsChecked = false;
+
+                return;
+            }
+
             string path = Playlist[CurrentTrack];
 
             media.Source = new Uri(path, UriKind.RelativeOrAbsolute);
@@ -157,9 +186,11 @@ namespace Player
                 return;
             }
 
-            if (CurrentTrack + 1 == Playlist.Count)
+            if (CurrentTrack + 1 >= Playlist.Count)
             {
                 CurrentTrack = 0;
+                media.Position = TimeSpan.Zero;
+                TimeSl.Value = media.Position.TotalSeconds;
 
                 if (RepeatTBtn.IsChecked != true)
                     PlayPauseTBtn.IsChecked = false;
@@ -184,7 +215,12 @@ namespace Player
 
         private void Media_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            MessageBox.Show($"Ошибка загрузки файла\n{Playlist[CurrentTrack]}");
+            if (PlayPauseTBtn.IsChecked == true)
+            {
+                Next();
+                PlayPauseTBtn.IsChecked = false;
+            }
         }
 
         private void Media_MediaOpened(object sender, RoutedEventArgs e)
@@ -245,8 +281,12 @@ namespace Player
 
         private void ShuffleTbtn_Unchecked(object sender, RoutedEventArgs e)
         {
-            currentTrack = originalPlaylist.IndexOf(playlist[CurrentTrack]);
+            int _currentTrack = originalPlaylist.IndexOf(playlist[CurrentTrack]);
             playlist = originalPlaylist;
+            if (_currentTrack >= 0)
+                currentTrack = _currentTrack;
+            else
+                CurrentTrack = 0;
         }
 
         private void Back10sBtn_Click(object sender, RoutedEventArgs e)
