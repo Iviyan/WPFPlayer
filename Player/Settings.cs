@@ -29,7 +29,7 @@ namespace Player
                 File.WriteAllText(AccountsFilePath, "[]");
             
             if (!File.Exists(PlaylistsFilePath))
-                File.WriteAllText(PlaylistsFilePath, "{}");
+                File.WriteAllText(PlaylistsFilePath, "[]");
             
             if (!File.Exists(SettingsFilePath))
                 File.WriteAllText(SettingsFilePath, "{}");
@@ -89,13 +89,13 @@ namespace Player
             return null;
         }
         
-        public Dictionary<string, List<string>> GetPlaylists()
+        public List<Playlist> GetPlaylists()
         {
             string text = File.ReadAllText(PlaylistsFilePath);
-            return JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(text);
+            return JsonConvert.DeserializeObject<List<Playlist>>(text);
         }
 
-        public void UpdatePlaylists(Dictionary<string, List<string>> playlists)
+        public void UpdatePlaylists(IList<Playlist> playlists)
         {
             JsonSerializer js = new();
             using var fw = new StreamWriter(PlaylistsFilePath);

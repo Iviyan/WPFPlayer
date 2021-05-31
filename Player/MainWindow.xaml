@@ -70,6 +70,18 @@
                 </MenuItem.Visibility>
             </MenuItem>
 
+            <MenuItem x:Name="ChangePassMI"
+                      Click="ChangePassMI_Click"
+                      Header="Изменить пароль"
+                      Visibility="{Binding IsAuthorized, Converter={StaticResource booleanToVisibilityConverter}}">
+                <MenuItem.Icon>
+                    <Run BaselineAlignment="Center"
+                         FontFamily="Segoe MDL2 Assets"
+                         FontSize="16"
+                         Text="&#xEF58;" />
+                </MenuItem.Icon>
+            </MenuItem>
+
             <MenuItem x:Name="LogoutMI"
                       Click="LogoutMI_Click"
                       Header="Выход"
@@ -137,6 +149,75 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2"
+                                   SnapsToDevicePixels="true"
+                                   Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                                   StrokeDashArray="1 2"
+                                   StrokeThickness="1" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="Button.Static.Background" Color="Transparent" />
+        <SolidColorBrush x:Key="Button.Static.Border" Color="#FF707070" />
+        <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#1777" />
+        <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
+        <SolidColorBrush x:Key="Button.Pressed.Background" Color="#2777" />
+        <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
+        <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
+        <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
+        <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
+        <Style x:Key="IconButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+            <Setter Property="Background" Value="{StaticResource Button.Static.Background}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}" />
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="true">
+                            <ContentPresenter x:Name="contentPresenter"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Focusable="False"
+                                              RecognizesAccessKey="True"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsDefaulted" Value="true">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Button.MouseOver.Background}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.MouseOver.Border}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Pressed.Background}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Pressed.Border}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource Button.Disabled.Background}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Button.Disabled.Border}" />
+                                <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{StaticResource Button.Disabled.Foreground}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -145,15 +226,48 @@
             <RowDefinition />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <MediaElement x:Name="media" LoadedBehavior="Manual" Visibility="Collapsed" />
+
+        <Grid x:Name="VideoView"
+              Grid.RowSpan="2"
+              Panel.ZIndex="1"
+              Background="Black"
+              Visibility="Collapsed">
+
+            <Button x:Name="CloseVideoViewBtn"
+                    Width="40"
+                    Height="40"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    d:Visibility="Visible"
+                    Background="Transparent"
+                    Click="CloseVideoViewBtn_Click"
+                    Content="X"
+                    FontSize="30"
+                    Foreground="White"
+                    Visibility="{Binding RelativeSource={RelativeSource AncestorType=Grid}, Path=IsMouseOver, Converter={StaticResource booleanToVisibilityConverter}}" />
+
+            <MediaElement x:Name="media" LoadedBehavior="Manual" />
+        </Grid>
 
         <DockPanel Margin="2px" VerticalAlignment="Top">
             <Button x:Name="AccountBtn"
+                    DockPanel.Dock="Right"
                     Padding="4"
                     Click="AccountBtn_Click"
-                    Content="Аккаунт"
-                    DockPanel.Dock="Right"
-                    FontSize="18" />
+                    Content="&#xE77B;"
+                    FontFamily="Segoe MDL2 Assets"
+                    FontSize="22"
+                    Style="{DynamicResource IconButtonStyle}" />
+
+            <Button x:Name="ExpandVideo"
+                    DockPanel.Dock="Left"
+                    Padding="4"
+                    Click="ExpandVideo_Click"
+                    Content="&#xE944;"
+                    FontFamily="Segoe MDL2 Assets"
+                    FontSize="18"
+                    Style="{DynamicResource IconButtonStyle}"
+                    Visibility="Hidden" />
 
             <TextBlock HorizontalAlignment="Center" FontSize="24" Text="Плейлисты" />
         </DockPanel>
@@ -165,7 +279,7 @@
             </Grid.ColumnDefinitions>
 
             <DockPanel>
-                <Button Command="{Binding AddPlaylistCommand}" Content="Добавить" DockPanel.Dock="Bottom" />
+                <Button DockPanel.Dock="Bottom" Command="{Binding AddPlaylistCommand}" Content="Добавить" />
                 <ListBox x:Name="PlaylistsLB"
                          Margin="0 0 0 4"
                          HorizontalContentAlignment="Stretch"
@@ -232,9 +346,9 @@
             </DockPanel>
             <GridSplitter Grid.Column="1" Width="2" VerticalAlignment="Stretch" />
             <DockPanel Grid.Column="2">
-                <Button Command="{Binding AddPlaylistItemCommand}"
+                <Button DockPanel.Dock="Bottom"
+                        Command="{Binding AddPlaylistItemCommand}"
                         Content="Добавить"
-                        DockPanel.Dock="Bottom"
                         IsEnabled="{Binding CurrentPlaylist, Converter={StaticResource isNotEqualConverter}, ConverterParameter={x:Null}}" />
 
                 <ListBox x:Name="PlaylistLB"
@@ -242,10 +356,10 @@
                          HorizontalContentAlignment="Stretch"
                          AllowDrop="{Binding CurrentPlaylist, Converter={StaticResource isNotEqualConverter}, ConverterParameter={x:Null}}"
                          Drop="PlaylistLB_Drop"
-                         SelectionChanged="PlaylistLB_SelectionChanged"
                          ItemContainerStyle="{DynamicResource RemovableListBoxItemContainerStyle}"
                          ItemsSource="{Binding Path=CurrentPlaylist.Items}"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="PlaylistLB_SelectionChanged">
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type local:Playlist}">
                             <Grid x:Name="TGrid" Margin="1px">

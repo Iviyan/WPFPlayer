@@ -28,6 +28,9 @@ namespace Player
 
         private DispatcherTimer timerVideoTime;
 
+        public event Action BeforeStart;
+        public event Action MediaOpened;
+
         public static readonly DependencyProperty MediaProperty = DependencyProperty.Register(
             "Media", typeof(MediaElement), typeof(ControlBar),
             new FrameworkPropertyMetadata(null, new PropertyChangedCallback(OnMediaChanged)));
@@ -75,7 +78,8 @@ namespace Player
         public IList<string> Playlist
         {
             get => playlist;
-            set {
+            set
+            {
                 originalPlaylist = value;
                 if (ShuffleTbtn.IsChecked == true)
                     playlist = originalPlaylist.Shuffle();
@@ -90,7 +94,9 @@ namespace Player
         public int CurrentTrack
         {
             get => currentTrack;
-            set {
+            set
+            {
+                BeforeStart?.Invoke();
                 currentTrack = value;
                 if (playlist != null)
                     SetTrack();
@@ -107,6 +113,40 @@ namespace Player
 
             CurrentTrack = index;
             SetControlEnable();
+        }
+
+        public void InsertMedia(Uri source, string trackName = null, bool lockSkip = false)
+        {
+            if (lockSkip)
+            {
+                TimeSl.IsEnabled = false;
+                BackBtn.IsEnabled = false;
+                NextBtn.IsEnabled = false;
+                ShuffleTbtn.IsEnabled = false;
+                RepeatTBtn.IsEnabled = false;
+                Back10sBtn.IsEnabled = false;
+                Forward10sBtn.IsEnabled = false;
+                media.MediaEnded += Media_MediaEnded_AfterInsert;
+            }
+            media.Source = source;
+
+            TitleTBl.Text = System.IO.Path.GetFileName(trackName ?? System.IO.Path.GetFileName(source.OriginalString));
+            if (PlayPauseTBtn.IsChecked != true)
+            {
+                media.Play();
+                media.Pause();
+            }
+        }
+        private void Media_MediaEnded_AfterInsert(object sender, RoutedEventArgs e)
+        {
+            media.MediaEnded -= Media_MediaEnded_AfterInsert;
+            TimeSl.IsEnabled = true;
+            BackBtn.IsEnabled = true;
+            NextBtn.IsEnabled = true;
+            ShuffleTbtn.IsEnabled = true;
+            RepeatTBtn.IsEnabled = true;
+            Back10sBtn.IsEnabled = true;
+            Forward10sBtn.IsEnabled = true;
         }
 
         public static readonly DependencyProperty RewindButtonsVisibilityProperty = DependencyProperty.Register(
@@ -194,7 +234,8 @@ namespace Player
 
                 if (RepeatTBtn.IsChecked != true)
                     PlayPauseTBtn.IsChecked = false;
-            } else
+            }
+            else
                 CurrentTrack++;
         }
 
@@ -209,7 +250,8 @@ namespace Player
             if (CurrentTrack - 1 < 0)
             {
                 CurrentTrack = Playlist.Count - 1;
-            } else
+            }
+            else
                 CurrentTrack--;
         }
 
@@ -229,16 +271,18 @@ namespace Player
 
             if (PlayPauseTBtn.IsChecked == true)
                 timerVideoTime.Start();
-        }
 
-        private void TimerVideoTime_Tick(object sender, EventArgs e)
-        {
-            TimeSl.Value = media.Position.TotalSeconds;
+            MediaOpened?.Invoke();
         }
 
         private void Media_MediaEnded(object sender, RoutedEventArgs e)
         {
             Next();
+        }
+
+        private void TimerVideoTime_Tick(object sender, EventArgs e)
+        {
+            TimeSl.Value = media.Position.TotalSeconds;
         }
 
         private void PlayPauseTBtn_Checked(object sender, RoutedEventArgs e)

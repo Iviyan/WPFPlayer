@@ -43,6 +43,23 @@ namespace Player
                     vm.IsPro = acc.Pro;
                 }
             }
+
+            vm.Playlists = new(settings.GetPlaylists());
+
+            MediaControlBar.MediaOpened += MediaControlBar_MediaOpened;
+        }
+
+        private void MediaControlBar_MediaOpened()
+        {
+            if (media.HasVideo)
+            {
+                VideoView.Visibility = Visibility.Visible;
+                ExpandVideo.Visibility = Visibility.Visible;
+            } else
+            {
+                VideoView.Visibility = Visibility.Collapsed;
+                ExpandVideo.Visibility = Visibility.Hidden;
+            }
         }
 
         ContextMenu AccountMenu;
@@ -88,6 +105,7 @@ namespace Player
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             settings.UpdateLocalSettings(localSettings);
+            settings.UpdatePlaylists(vm.Playlists);
         }
 
         private void BuyProMI_Click(object sender, RoutedEventArgs e)
@@ -114,6 +132,26 @@ namespace Player
         {
             if (PlaylistLB.SelectedIndex >= 0)
                 MediaControlBar.SetPlaylist(vm.CurrentPlaylist.Items, PlaylistLB.SelectedIndex);
+        }
+
+        private void CloseVideoViewBtn_Click(object sender, RoutedEventArgs e)
+        {
+            VideoView.Visibility = Visibility.Collapsed;
+        }
+
+        private void ExpandVideo_Click(object sender, RoutedEventArgs e)
+        {
+            VideoView.Visibility = Visibility.Visible;
+        }
+
+        private void ChangePassMI_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePasswordWindow changePasswordWindow = new(settings, localSettings.Login);
+            bool? res = changePasswordWindow.ShowDialog();
+            if (res == true)
+            {
+                localSettings.Password = changePasswordWindow.Password;
+            }
         }
     }
 }
