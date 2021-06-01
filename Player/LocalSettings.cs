@@ -10,5 +10,6 @@ namespace Player
     {
         public string Login { get; set; }
         public string Password { get; set; }
+        public IList<Playlist> Playlists { get; set; }
     }
 }

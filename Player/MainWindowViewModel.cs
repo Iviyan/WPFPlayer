@@ -86,6 +86,13 @@ namespace Player
                     CurrentPlaylist.Items.Remove(i);
             });
 
+        public static string[] videoFileExtensions = { "webm", "mpg", "mp2", "mpeg", "mpe", "mpv", "ogg", "mp4", "m4p", "m4v", "avi", "wmv", "mov", "flv", "swf" };
+        public static string[] audioFileExtensions = { "wav", "mp3", "ogg", "gsm", "dct", "flac", "au", "aiff", "raw", "m4a", "aac" };
+        public static string[] mediaFileExtensions = videoFileExtensions.Union(audioFileExtensions).ToArray();
+
+        public static string audioFileExtensionsFilter = $"All audio files|{audioFileExtensions.Aggregate("", (res, cur) => res += $"*.{cur};")}".TrimEnd(';');
+        public static string mediaFileExtensionsFilter = $"All media files|{mediaFileExtensions.Aggregate("", (res, cur) => res += $"*.{cur};")}".TrimEnd(';');
+
         protected ICommand addPlaylistItemCommand;
         public ICommand AddPlaylistItemCommand =>
             addPlaylistItemCommand ??= new RelayCommand(() =>
@@ -93,16 +100,15 @@ namespace Player
                 OpenFileDialog openFileDialog = new();
                 openFileDialog.InitialDirectory = "c:\\";
                 //openFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                openFileDialog.Filter = "All media files|*.wav;*.aac;*.wma;*.wmv;*.avi;*.mpg;*.mpeg;*.m1v;*.mp2;*.mp3;*.mpa;*.mpe;*.m3u;*.mp4;*.mov;*.3g2;*.3gp2;*.3gp;*.3gpp;*.m4a;*.cda;*.aif;*.aifc;*.aiff;*.mid;*.midi;*.rmi;*.mkv";
-
+                openFileDialog.Filter = IsPro ? mediaFileExtensionsFilter : audioFileExtensionsFilter;
                 if (openFileDialog.ShowDialog() == true)
-                { 
+                {
                     string filePath = openFileDialog.FileName;
                     if (!CurrentPlaylist.Items.Contains(filePath))
                         CurrentPlaylist.Items.Add(filePath);
                 };
             });
-    
+
 
 
         public event PropertyChangedEventHandler PropertyChanged;

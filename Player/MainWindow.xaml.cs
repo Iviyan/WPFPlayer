@@ -34,23 +34,32 @@ namespace Player
             AccountMenu = this.Resources["AccountCMenu"] as ContextMenu;
 
             localSettings = settings.GetLocalSettings();
+            Account acc = null;
             if (localSettings.Login != null)
             {
-                Account acc = settings.Auth(localSettings.Login, localSettings.Password);
+                acc = settings.Auth(localSettings.Login, localSettings.Password);
                 if (acc != null)
                 {
                     vm.Login = acc.Login;
                     vm.IsPro = acc.Pro;
+
                 }
             }
 
-            vm.Playlists = new(settings.GetPlaylists());
+            vm.Playlists = vm.IsAuthorized ? new(acc.Playlists) : new(localSettings.Playlists ?? new Playlist[] { });
 
             MediaControlBar.MediaOpened += MediaControlBar_MediaOpened;
+            MediaControlBar.BeforeStart += MediaControlBar_BeforeStart;
         }
 
         private void MediaControlBar_MediaOpened()
         {
+            if (vm.CurrentPlaylist.Items == MediaControlBar.OriginalPlaylist)
+            {
+                int ind = vm.CurrentPlaylist.Items.IndexOf(MediaControlBar.Track);
+                if (ind >= 0) PlaylistLB.SelectedIndex = ind;
+            }
+
             if (media.HasVideo)
             {
                 VideoView.Visibility = Visibility.Visible;
@@ -59,6 +68,24 @@ namespace Player
             {
                 VideoView.Visibility = Visibility.Collapsed;
                 ExpandVideo.Visibility = Visibility.Hidden;
+            }
+        }
+
+        static Random rnd = new();
+
+        static string[] advertisingFiles = { /*"Advertising\\1xbet.mp4"*/ };
+        const int advertisingInterval = 5;
+        int currentAdvertisingInterval = advertisingInterval;
+        private void MediaControlBar_BeforeStart()
+        {
+            if (!vm.IsPro || advertisingFiles.Length > 0)
+            {
+                currentAdvertisingInterval--;
+                if (currentAdvertisingInterval <= 0)
+                {
+                    MediaControlBar.InsertMedia(new Uri(advertisingFiles[rnd.Next(0, advertisingFiles.Length - 1)], UriKind.RelativeOrAbsolute), "Реклама", true);
+                    currentAdvertisingInterval = advertisingInterval;
+                }
             }
         }
 
@@ -80,6 +107,18 @@ namespace Player
                 localSettings.Login = vm.Login = acc.Login;
                 vm.IsPro = acc.Pro;
                 localSettings.Password = acc.Password;
+
+                if (acc.Playlists?.Count > 0)
+                {
+                    if (vm.Playlists?.Count == 0)
+                        vm.Playlists = new(acc.Playlists);
+                    else
+                    {
+                        var res = MessageBox.Show("Плейлисты есть как на аккаунте, так и в локальном хранилище.\nДа - выполнить слияние\nНет - оставить версию, что на аккаунте\nОставитьв локальную версию", "Конфликт", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+                        if (res == MessageBoxResult.Yes) vm.Playlists = new(acc.Playlists.Concat(localSettings.Playlists));
+                        else if (res == MessageBoxResult.No) vm.Playlists = new(acc.Playlists);
+                    }
+                }
             }
         }
 
@@ -93,19 +132,32 @@ namespace Player
                 localSettings.Login = vm.Login = acc.Login;
                 vm.IsPro = acc.Pro;
                 localSettings.Password = acc.Password;
+                localSettings.Playlists = null;
             }
         }
 
         private void LogoutMI_Click(object sender, RoutedEventArgs e)
         {
+            Account acc = new(localSettings.Login, localSettings.Password) { Pro = vm.IsPro, Playlists = vm.Playlists };
+            settings.UpdateAccount(acc);
+
             vm.Login = null;
             localSettings.Login = localSettings.Password = null;
+            vm.Playlists = null;
+            MediaControlBar.Playlist = null;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (vm.IsAuthorized)
+            {
+                Account acc = new(localSettings.Login, localSettings.Password) { Pro = vm.IsPro, Playlists = vm.Playlists };
+                settings.UpdateAccount(acc);
+            } else
+            {
+                localSettings.Playlists = vm.Playlists;
+            }
             settings.UpdateLocalSettings(localSettings);
-            settings.UpdatePlaylists(vm.Playlists);
         }
 
         private void BuyProMI_Click(object sender, RoutedEventArgs e)
@@ -114,7 +166,6 @@ namespace Player
             if (r) vm.IsPro = true;
         }
 
-        static string[] mediaFileExtensions = { "wav", "aac", "wma", "wmv", "avi", "mpg", "mpeg", "m1v", "mp2", "mp3", "mpa", "mpe", "m3u", "mp4", "mov", "3g2", "3gp2", "3gp", "3gpp", "m4a", "cda", "aif", "aifc", "aiff", "mid", "midi", "rmi", "mkv" };
         private void PlaylistLB_Drop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -122,8 +173,25 @@ namespace Player
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (var file in files)
                 {
-                    if (File.Exists(file) && mediaFileExtensions.Contains(System.IO.Path.GetExtension(file).Substring(1).ToLower()))
+                    if (File.Exists(file))
+                    {
+                        if (vm.IsPro)
+                        {
+                            if (!MainWindowViewModel.mediaFileExtensions
+                                    .Contains(System.IO.Path.GetExtension(file).Substring(1).ToLower())) continue;
+                        } else
+                        {
+                            if (!MainWindowViewModel.audioFileExtensions
+                                    .Contains(System.IO.Path.GetExtension(file).Substring(1).ToLower()))
+                            {
+                                if (MainWindowViewModel.mediaFileExtensions
+                                    .Contains(System.IO.Path.GetExtension(file).Substring(1).ToLower()))
+                                    MessageBox.Show("Добавление видеофайлов доступно только в про версии.");
+                                continue;
+                            }
+                        }
                         vm.CurrentPlaylist.Items.Add(file);
+                    }
                 }
             }
         }
@@ -131,7 +199,11 @@ namespace Player
         private void PlaylistLB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (PlaylistLB.SelectedIndex >= 0)
+            {
+                if (vm.CurrentPlaylist.Items == MediaControlBar.OriginalPlaylist && MediaControlBar.Track == PlaylistLB.SelectedItem as string)
+                    return;
                 MediaControlBar.SetPlaylist(vm.CurrentPlaylist.Items, PlaylistLB.SelectedIndex);
+            }
         }
 
         private void CloseVideoViewBtn_Click(object sender, RoutedEventArgs e)

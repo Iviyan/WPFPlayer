@@ -28,6 +28,10 @@ namespace Player
 
         private DispatcherTimer timerVideoTime;
 
+        public string Track { get; private set; }
+        public IList<string> OriginalPlaylist { get => originalPlaylist; }
+
+
         public event Action BeforeStart;
         public event Action MediaOpened;
 
@@ -97,6 +101,8 @@ namespace Player
             set
             {
                 BeforeStart?.Invoke();
+                if (insetredMedia) return;
+
                 currentTrack = value;
                 if (playlist != null)
                     SetTrack();
@@ -115,8 +121,10 @@ namespace Player
             SetControlEnable();
         }
 
+        bool insetredMedia = false;
         public void InsertMedia(Uri source, string trackName = null, bool lockSkip = false)
         {
+            insetredMedia = true;
             if (lockSkip)
             {
                 TimeSl.IsEnabled = false;
@@ -127,6 +135,7 @@ namespace Player
                 Back10sBtn.IsEnabled = false;
                 Forward10sBtn.IsEnabled = false;
                 media.MediaEnded += Media_MediaEnded_AfterInsert;
+                media.MediaEnded -= Media_MediaEnded;
             }
             media.Source = source;
 
@@ -140,6 +149,7 @@ namespace Player
         private void Media_MediaEnded_AfterInsert(object sender, RoutedEventArgs e)
         {
             media.MediaEnded -= Media_MediaEnded_AfterInsert;
+            media.MediaEnded += Media_MediaEnded;
             TimeSl.IsEnabled = true;
             BackBtn.IsEnabled = true;
             NextBtn.IsEnabled = true;
@@ -147,6 +157,9 @@ namespace Player
             RepeatTBtn.IsEnabled = true;
             Back10sBtn.IsEnabled = true;
             Forward10sBtn.IsEnabled = true;
+            insetredMedia = false;
+
+            SetTrack();
         }
 
         public static readonly DependencyProperty RewindButtonsVisibilityProperty = DependencyProperty.Register(
@@ -203,12 +216,14 @@ namespace Player
                 TitleTBl.Text = "";
                 if (PlayPauseTBtn.IsChecked == true)
                     PlayPauseTBtn.IsChecked = false;
+                Track = null;
 
                 return;
             }
 
             string path = Playlist[CurrentTrack];
 
+            Track = path;
             media.Source = new Uri(path, UriKind.RelativeOrAbsolute);
             TitleTBl.Text = System.IO.Path.GetFileName(path);
             if (PlayPauseTBtn.IsChecked != true)

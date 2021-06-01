@@ -12,14 +12,12 @@ namespace Player
     {
         public string FolderName { get; }
         public string AccountsFilePath { get; }
-        public string PlaylistsFilePath { get; }
         public string SettingsFilePath { get; }
 
         public Settings(string folderName = "Settings")
         {
             FolderName = folderName;
             AccountsFilePath = $"{FolderName}\\Accounts.json";
-            PlaylistsFilePath = $"{FolderName}\\Playlists.json";
             SettingsFilePath = $"{FolderName}\\Settings.json";
 
             if (!Directory.Exists(folderName))
@@ -27,10 +25,7 @@ namespace Player
 
             if (!File.Exists(AccountsFilePath))
                 File.WriteAllText(AccountsFilePath, "[]");
-            
-            if (!File.Exists(PlaylistsFilePath))
-                File.WriteAllText(PlaylistsFilePath, "[]");
-            
+                        
             if (!File.Exists(SettingsFilePath))
                 File.WriteAllText(SettingsFilePath, "{}");
         }
@@ -77,6 +72,21 @@ namespace Player
             js.Serialize(fw, accounts);
             return true;
         }
+        
+        public bool UpdateAccount(Account account)
+        {
+            string text = File.ReadAllText(AccountsFilePath);
+            var accounts = JsonConvert.DeserializeObject<List<Account>>(text);
+
+            int accInd = accounts.FindIndex(a => a.Login == account.Login);
+            if (accInd == -1) return false;
+            accounts[accInd] = account;
+
+            JsonSerializer js = new();
+            using var fw = new StreamWriter(AccountsFilePath);
+            js.Serialize(fw, accounts);
+            return true;
+        }
 
         public Account Auth(string login, string pass)
         {
@@ -87,19 +97,6 @@ namespace Player
             if (acc != null && acc.Password == pass)
                 return acc;
             return null;
-        }
-        
-        public List<Playlist> GetPlaylists()
-        {
-            string text = File.ReadAllText(PlaylistsFilePath);
-            return JsonConvert.DeserializeObject<List<Playlist>>(text);
-        }
-
-        public void UpdatePlaylists(IList<Playlist> playlists)
-        {
-            JsonSerializer js = new();
-            using var fw = new StreamWriter(PlaylistsFilePath);
-            js.Serialize(fw, playlists);
         }
         
         public void UpdateLocalSettings(LocalSettings localSettings)
